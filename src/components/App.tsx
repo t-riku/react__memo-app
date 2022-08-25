@@ -1,11 +1,18 @@
-import React, { ChangeEvent, FC, useState } from "react";
+import React, { ChangeEvent, FC, useCallback, useState } from "react";
+import useMemoList from "../hooks/useMemoList";
+import MemoList from "./MemoList";
 
 const App: FC = () => {
+  // カスタムフックからそれぞれ取得
+  // 分割代入。()にmemosなどの値が入っている。
+  // const useMemoList() = {
+  //   memos=memos,
+  //   addTodo=addTodo(),
+  //   deleteTodo=deleteTodo()
+  // };
+  const { memos, addTodo, deleteTodo } = useMemoList();
   // テキストボックスstate
   const [text, setText] = useState<string>("");
-
-  // メモ一覧state（配列）
-  const [memos, setMemos] = useState<string[]>([]);
 
   // テキストボックス入力時に入力内容をstateに設定
   const onChangeText = (e: ChangeEvent<HTMLInputElement>) => {
@@ -15,18 +22,22 @@ const App: FC = () => {
 
   // 追加ボタンを押した時
   const onClickAdd = () => {
-    const newMemos = [...memos];
-    newMemos.push(text);
-    setMemos(newMemos);
+    // hooksのuseMemoListにインプットタグで取得したテキスト情報をaddTodoに渡す
+    addTodo(text);
+    // テキストボックスを空に
     setText("");
   };
 
   // 削除ボタンを押した時（何番目が押されたかを引数で受け取る）
-  const onClickDelete = (index: number) => {
-    const newMemos = [...memos];
-    newMemos.splice(index, 1);
-    setMemos(newMemos);
-  };
+  // useCallback関数は親から子コンポーネントに関数をpropsとして渡したい時にpropsが子コンポーネントが無駄に再レンダリングされてしまうのを防ぐ関数useCallback()で囲むだけ
+  // この場合deleteTodoの値が変わった時に再レンダリングされる
+  const onClickDelete = useCallback(
+    (index: number) => {
+      // hooksのuseMemoListにボタンタグで取得した何番目かの情報をaddTodoに渡す
+      deleteTodo(index);
+    },
+    [deleteTodo]
+  );
 
   return (
     <div className="App">
@@ -47,7 +58,9 @@ const App: FC = () => {
               追加
             </button>
           </div>
-          <div className="border border-slate-300 rounded px-40 py-10 mx-auto mt-10 w-6/12">
+          {/* MemoListにpropsとして値を渡す */}
+          <MemoList memos={memos} onClickDelete={onClickDelete} />
+          {/* <div className="border border-slate-300 rounded px-40 py-10 mx-auto mt-10 w-6/12">
             <p className="mb-8">メモ一覧</p>
             <ul>
               <>
@@ -66,7 +79,7 @@ const App: FC = () => {
                 ))}
               </>
             </ul>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
